@@ -1,10 +1,12 @@
 import os
 from telethon import TelegramClient
+from dotenv import load_dotenv
 
-# Credenciales (verificadas y listas)
-api_id = '33548315'
-api_hash = 'e49a33cf6a585f9e66e0b2097b24676c'
-nombre_sesion = 'sesion_diana'
+load_dotenv()
+
+api_id = os.getenv('API_ID')
+api_hash = os.getenv('API_HASH')
+nombre_sesion = os.getenv('NOMBRE_SESION')
 
 # Creamos la carpeta de descargas automáticamente si no existe
 # Esto evita el error de "Folder not found"
@@ -18,14 +20,11 @@ client = TelegramClient(nombre_sesion, api_id, api_hash)
 async def main():
     print("Conectando al sistema de Telegram...")
     
-    # Usamos un canal verificado para evitar errores de nombre
     try:
         async for message in client.iter_messages('me', limit=10):
-            # Limpiamos el texto para evitar errores si el mensaje es None
             texto = message.text[:50].replace('\n', ' ') if message.text else "Sin texto"
             print(f"ID: {message.id} | Texto: {texto}...")
             
-            # Verificamos si el mensaje tiene contenido multimedia (foto)
             if message.photo:
                 print(f"Descargando imagen del mensaje {message.id}...")
                 path = await message.download_media(file='descargas/')
