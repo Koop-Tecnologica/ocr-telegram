@@ -1,37 +1,47 @@
 import os
-from telethon import TelegramClient
-from dotenv import load_dotenv
+import asyncio
+from telethon import TelegramClient, events
+# No es estrictamente necesario load_dotenv en Render porque ya configuraste las variables en el panel
+# pero lo dejamos por si pruebas localmente.
 
-load_dotenv()
-
-api_id = os.getenv('API_ID')
+# 1. Configuraciones desde Variables de Entorno de Render
+api_id = os.getenv('APP_ID') # En tu Render pusiste APP_ID
 api_hash = os.getenv('API_HASH')
-nombre_sesion = os.getenv('NOMBRE_SESION')
+bot_token = os.getenv('BOT_TOKEN') # Usaremos el Token del BotFather
 
-# Creamos la carpeta de descargas automáticamente si no existe
-# Esto evita el error de "Folder not found"
-if not os.path.exists('descargas'):
-    os.makedirs('descargas')
-    print("Carpeta 'descargas' creada exitosamente.")
+# 2. Asegurar carpeta de descargas
+CARPETA = 'descargas'
+if not os.path.exists(CARPETA):
+    os.makedirs(CARPETA)
+    print(f"Carpeta '{CARPETA}' creada para Render.")
 
-# Creamos el cliente de Telegram
-client = TelegramClient(nombre_sesion, api_id, api_hash)
+# 3. Inicializar el cliente como BOT (más estable para servidores)
+# Usamos 'bot_session' para que no pida código de verificación por SMS en el servidor
+client = TelegramClient('bot_session', api_id, api_hash)
+
+# 4. Escuchar mensajes nuevos con imágenes
+@client.on(events.NewMessage)
+async def manejador_de_mensajes(event):
+    # Si el mensaje tiene una foto
+    if event.photo:
+        print(f"Detectada imagen en mensaje {event.id}. Descargando...")
+        path = await event.download_media(file=CARPETA)
+        print(f"¡Imagen guardada en: {path}!")
+        
+        # Aquí es donde podrías llamar a tu función de OCR de sistema_final.py
+        # Ejemplo: procesar_todo() 
+
+    # Responder al usuario para saber que está vivo
+    if event.text == '/start':
+        await event.respond("¡Hola! Soy tu bot de OCR en Render. Envíame una imagen.")
 
 async def main():
-    print("Conectando al sistema de Telegram...")
-    
-    try:
-        async for message in client.iter_messages('me', limit=10):
-            texto = message.text[:50].replace('\n', ' ') if message.text else "Sin texto"
-            print(f"ID: {message.id} | Texto: {texto}...")
-            
-            if message.photo:
-                print(f"Descargando imagen del mensaje {message.id}...")
-                path = await message.download_media(file='descargas/')
-                print(f"¡Imagen guardada en: {path}!")
-    except Exception as e:
-        print(f"Ocurrió un error durante la extracción: {e}")
+    print("Bot conectado y esperando imágenes...")
+    # Iniciamos sesión usando el BOT_TOKEN de las variables de entorno
+    await client.start(bot_token=bot_token)
+    # Esto mantiene al bot encendido indefinidamente en Render
+    await client.run_until_disconnected()
 
 if __name__ == "__main__":
-    with client:
-        client.loop.run_until_complete(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
