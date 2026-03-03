@@ -1,0 +1,5 @@
+python-telegram-bot
+pytesseract
+Pillow
+pandas
+openpyxl
