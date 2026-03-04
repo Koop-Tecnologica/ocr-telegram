@@ -12,11 +12,11 @@ WORKDIR /app
 # 3. Copiamos todos los archivos del repositorio al contenedor
 COPY . .
 
-# 4. Creamos la carpeta de descargas (por si no existe en el repo)
+# 4. Creamos la carpeta de descargas
 RUN mkdir -p descargas
 
 # 5. Instalamos las librerías de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. COMANDO CORREGIDO: Ejecutamos el archivo que mantiene la conexión viva
-CMD ["python", "conexion_telegram.py"]
+# 6. Lanzamiento del servicio
+CMD python conexion_telegram.py & python -m http.server $PORT
