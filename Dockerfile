@@ -1,19 +1,22 @@
 FROM python:3.10-slim
 
-# Instalamos Tesseract OCR y dependencias necesarias
+# 1. Instalamos Tesseract OCR y dependencias del sistema
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     libtesseract-dev \
     && apt-get clean
 
+# 2. Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos los archivos
+# 3. Copiamos todos los archivos del repositorio al contenedor
 COPY . .
 
-# Instalamos las librerías de Python
-# Asegúrate de tener un archivo requirements.txt con: python-telegram-bot, pytesseract, etc.
+# 4. Creamos la carpeta de descargas (por si no existe en el repo)
+RUN mkdir -p descargas
+
+# 5. Instalamos las librerías de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Comando para iniciar tu bot
-CMD ["python", "sistema_final.py"]
+# 6. COMANDO CORREGIDO: Ejecutamos el archivo que mantiene la conexión viva
+CMD ["python", "conexion_telegram.py"]
